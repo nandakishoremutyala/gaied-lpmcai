@@ -1,0 +1,28 @@
+From: jane.smith@example.com
+To: loans@bankexample.com
+Subject: Loan Request - Application Form
+Date: Mon, 24 Mar 2025 11:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="boundary_12345"
+
+--boundary_12345
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Dear Loan Processing Team,
+
+I am submitting a loan request for USD 10,000.00. Please find attached my loan application form for your review. I would appreciate a response by 30-Mar-2025, as this is an urgent request.
+
+Thank you,
+Jane Smith
+Phone: +1-555-987-6543
+Email: jane.smith@example.com
+
+--boundary_12345
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="loan_application.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjAKMSAwIG9iago8PC9UeXBlIC9DYXRhbG9nIC9QYWdlcyAyIDAgUj4+CmVuZG9iagoKMiAwIG9iago8PC9UeXBlIC9QYWdlcyAvS2lkcyBbMyAwIFJdIC9Db3VudCAxPj4KZW5kb2JqCgozIDAgb2JqCjw8L1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvUmVzb3VyY2VzIDw8Pj4gL0NvbnRlbnRzIDQgMCBSIC9NZWRpYUJveCBbMCAwIDMwMCAxNDRdPj4KZW5kb2JqCgo0IDAgb2JqCjw8L0xlbmd0aCA0ND4+CnN0cmVhbQogICAgQlQKICAgICAgMjAgMTIwIFRECiAgICAgIC9GMSAxMiBUZgogICAgICAgKEhlbGxvIFdvcmxkKSBUagpFVAplbmRzdHJlYW0KZW5kb2JqCgp4cmVmCjAgNQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTAgMDAwMDAgbiAKMDAwMDAwMDA3NyAwMDAwMCBuIAowMDAwMDAwMTM4IDAwMDAwIG4gCjAwMDAwMDAyMjMgMDAwMDAgbiAKdHJhaWxlcgo8PC9TaXplIDUgL1Jvb3QgMSAwIFI+Pgogc3RhcnR4cmVmCiAzMDUKJSVFT0YK
+
+--boundary_12345--
