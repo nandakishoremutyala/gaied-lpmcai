@@ -1,0 +1,18 @@
+{
+  "REQUEST_TYPES": ["Payment Inquiry", "Loan Request", "Account Update"],
+  "SUB_REQUEST_TYPES": {
+    "Payment Inquiry": ["Payment Confirmation", "Payment Delay"],
+    "Loan Request": ["Loan Status", "Loan Approval"],
+    "Account Update": ["Account Details", "Account Closure"]
+  },
+  "ROUTING_RULES": {
+    "Payment Inquiry": "Finance Team",
+    "Loan Request": "Loan Processing Team",
+    "Account Update": "Customer Support Team"
+  },
+  "PRIORITY_RULES": {
+    "Payment Inquiry": 3,
+    "Loan Request": 2,
+    "Account Update": 1
+  }
+}

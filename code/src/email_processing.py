@@ -42,24 +42,15 @@ def method_not_allowed(e):
     flash("Please use the upload form to submit files.", "error")
     return redirect(url_for('upload_page'))
 
+# Load configurations from config.json
+with open('code/src/config.json', 'r') as config_file:
+    config = json.load(config_file)
 
 # Define request types, sub-request types, and routing rules
-REQUEST_TYPES = ["Payment Inquiry", "Loan Request", "Account Update"]
-SUB_REQUEST_TYPES = {
-    "Payment Inquiry": ["Payment Confirmation", "Payment Delay"],
-    "Loan Request": ["Loan Status", "Loan Approval"],
-    "Account Update": ["Account Details", "Account Closure"]
-}
-ROUTING_RULES = {
-    "Payment Inquiry": "Finance Team",
-    "Loan Request": "Loan Processing Team",
-    "Account Update": "Customer Support Team"
-}
-PRIORITY_RULES = {
-    "Payment Inquiry": 3,
-    "Loan Request": 2,
-    "Account Update": 1
-}
+REQUEST_TYPES = config['REQUEST_TYPES']
+SUB_REQUEST_TYPES = config['SUB_REQUEST_TYPES']
+ROUTING_RULES = config['ROUTING_RULES']
+PRIORITY_RULES = config['PRIORITY_RULES']
 
 # Load Hugging Face models in the main process
 logger.info("Loading Hugging Face models...")
