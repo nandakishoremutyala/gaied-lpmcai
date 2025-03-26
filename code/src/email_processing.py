@@ -5,11 +5,12 @@ import re
 import json
 import hashlib
 import logging
-from flask import Flask, request, render_template, redirect, url_for, flash
+from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 import jaydebeapi
 from transformers import pipeline
 from multiprocessing import Pool
 from datetime import datetime
+import yaml
 
 # Set up logging
 logging.basicConfig(
@@ -22,51 +23,77 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Read keywords from YML file
+with open('keywords.yml', 'r') as f:
+    data = yaml.load(f, Loader=yaml.FullLoader)
+REQUEST_TYPES = list(data.keys())
+SUB_REQUEST_TYPES = data
+
+ROUTING_RULES = {
+    "Payment Inquiry": "Finance Team",
+    "Loan Request": "Loan Processing Team",
+    "Account Update": "Customer Support Team",
+
+    # New Mappings
+    "Increase": "Loan Approval Team",
+    "Decrease": "Loan Modification Team",
+    "Fee Payment": "Billing & Payments Team",
+    "Ongoing Fee": "Finance Team",
+    "Letter of Credit Fee": "Trade Finance Team",
+    "Principal": "Loan Repayment Team",
+    "Interest": "Loan Interest Management Team",
+    "Principal + Interest": "Loan Servicing Team",
+    "Principal + Interest + Fee": "Comprehensive Loan Management Team",
+    "Money Movement - Inbound": "Treasury & Funds Management",
+    "Money Movement - Outbound": "Payments & Transfers Team",
+    "Timebound": "Time-Sensitive Transactions Team",
+    "Foreign Currency": "Forex & International Transfers Team"
+}
+
+PRIORITY_RULES = {
+    "Payment Inquiry": 3,
+    "Loan Request": 2,
+    "Account Update": 1,
+
+    # New Priorities
+    "Increase": 2,  # Loan limit adjustments are important but not urgent
+    "Decrease": 2,  # Similar priority as increasing loans
+    "Fee Payment": 3,  # Payments should be processed quickly
+    "Ongoing Fee": 3,  # Recurring fees should be addressed promptly
+    "Letter of Credit Fee": 2,  # Important for international trade but not always urgent
+    "Principal": 2,  # Loan principal payments must be handled on time
+    "Interest": 3,  # Interest payments are crucial to avoid penalties
+    "Principal + Interest": 3,  # Loan installment processing needs priority
+    "Principal + Interest + Fee": 3,  # Complete loan settlement is high priority
+    "Money Movement - Inbound": 2,  # Incoming funds are important but can wait slightly
+    "Money Movement - Outbound": 3,  # Outgoing transactions need higher priority
+    "Timebound": 4,  # Critical priority due to deadlines
+    "Foreign Currency": 2  # Foreign transactions require attention but not always urgent
+}
+
 # Flask app setup
 app = Flask(__name__, template_folder='templates')
 app.secret_key = "your-secret-key"  # Required for flash messages
 UPLOAD_FOLDER = "uploads/"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
 # Add error handlers
-@app.errorhandler(Exception)
+@ app.errorhandler(Exception)
 def handle_exception(e):
     logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
     return "Internal Server Error", 500
 
-
-@app.errorhandler(405)
+@ app.errorhandler(405)
 def method_not_allowed(e):
     logger.warning(f"Method not allowed: {str(e)}")
     flash("Please use the upload form to submit files.", "error")
     return redirect(url_for('upload_page'))
-
-
-# Define request types, sub-request types, and routing rules
-REQUEST_TYPES = ["Payment Inquiry", "Loan Request", "Account Update"]
-SUB_REQUEST_TYPES = {
-    "Payment Inquiry": ["Payment Confirmation", "Payment Delay"],
-    "Loan Request": ["Loan Status", "Loan Approval"],
-    "Account Update": ["Account Details", "Account Closure"]
-}
-ROUTING_RULES = {
-    "Payment Inquiry": "Finance Team",
-    "Loan Request": "Loan Processing Team",
-    "Account Update": "Customer Support Team"
-}
-PRIORITY_RULES = {
-    "Payment Inquiry": 3,
-    "Loan Request": 2,
-    "Account Update": 1
-}
 
 # Load Hugging Face models in the main process
 logger.info("Loading Hugging Face models...")
 CLASSIFIER = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 NER = pipeline("ner", model="dslim/bert-base-NER")
 logger.info("Models loaded successfully.")
-
 
 # Step 1: Extract email components
 def extract_email_components(filepath):
@@ -77,6 +104,7 @@ def extract_email_components(filepath):
             subject = msg['subject'] or ""
             body = ""
             attachments = []
+            from_address = msg['From'] or ""
 
             for part in msg.walk():
                 if part.get_content_type() == 'text/plain':
@@ -91,14 +119,14 @@ def extract_email_components(filepath):
                 'filename': os.path.basename(filepath),
                 'subject': subject,
                 'body': body,
-                'attachments': attachments
+                'attachments': attachments,
+                'from_address': from_address
             }
             logger.info(f"Email components extracted: {email_data['filename']}")
             return email_data
     except Exception as e:
         logger.error(f"Error extracting email components from {filepath}: {str(e)}")
         return None
-
 
 # Step 2: Classify email intent using Hugging Face (in main process)
 def classify_email_intent(email_data):
@@ -109,7 +137,7 @@ def classify_email_intent(email_data):
         request_type = result['labels'][0]
         confidence = result['scores'][0]
 
-        sub_types = SUB_REQUEST_TYPES.get(request_type, [])
+        sub_types = SUB_REQUEST_TYPES.get(request_type,[])
         sub_request_type, sub_confidence = None, 0.0
         if sub_types:
             sub_result = CLASSIFIER(text, candidate_labels=sub_types)
@@ -127,7 +155,6 @@ def classify_email_intent(email_data):
     except Exception as e:
         logger.error(f"Error classifying intent for {email_data['filename']}: {str(e)}")
         return None
-
 
 # Step 3: Extract context of email using Hugging Face (in main process)
 def extract_context(email_data):
@@ -155,7 +182,6 @@ def extract_context(email_data):
         logger.error(f"Error extracting context for {email_data['filename']}: {str(e)}")
         return None
 
-
 # Step 4: Handle multi-request emails (in main process)
 def handle_multi_request(email_data):
     logger.info(f"Handling multi-request for email: {email_data['filename']}")
@@ -178,7 +204,6 @@ def handle_multi_request(email_data):
     except Exception as e:
         logger.error(f"Error handling multi-request for {email_data['filename']}: {str(e)}")
         return None, []
-
 
 # Step 5: Assign priority and confidence
 def assign_priority_and_confidence(intent, email_data):
@@ -203,7 +228,6 @@ def assign_priority_and_confidence(intent, email_data):
         logger.error(f"Error assigning priority for {email_data['filename']}: {str(e)}")
         return None
 
-
 # Step 6: Compute email hash for duplicate detection
 def compute_email_hash(email_data):
     logger.info(f"Computing hash for email: {email_data['filename']}")
@@ -216,7 +240,6 @@ def compute_email_hash(email_data):
         logger.error(f"Error computing hash for {email_data['filename']}: {str(e)}")
         return None
 
-
 # Step 7: Set up H2 database
 def setup_h2_database():
     logger.info("Setting up H2 database...")
@@ -225,7 +248,7 @@ def setup_h2_database():
             "org.h2.Driver",
             "jdbc:h2:./email_db",
             ["sa", ""],
-            "h2-latest.jar"
+            "h2latest.jar"
         )
         cursor = conn.cursor()
         cursor.execute("""
@@ -236,7 +259,8 @@ def setup_h2_database():
                 sub_request_type VARCHAR(255),
                 confidence FLOAT,
                 context TEXT,
-                email_hash VARCHAR(255)
+                email_hash VARCHAR(255),
+                email_from VARCHAR(255)
             )
         """)
         logger.info("H2 database setup complete.")
@@ -245,12 +269,11 @@ def setup_h2_database():
         logger.error(f"Error setting up H2 database: {str(e)}")
         return None, None
 
-
 # Step 8: Detect duplicates
 def detect_duplicates(cursor, email_data, email_hash):
     logger.info(f"Detecting duplicates for email: {email_data['filename']}")
     try:
-        cursor.execute("SELECT COUNT(*) FROM emails WHERE email_hash = ?", (email_hash,))
+        cursor.execute("SELECT COUNT(*) FROM emails WHERE email_hash = ? AND email_from = ?", (email_hash, email_data['from_address'],))
         count = cursor.fetchone()[0]
         is_duplicate = count > 0
         logger.info(f"Duplicate check: {'Duplicate' if is_duplicate else 'Not a duplicate'}")
@@ -259,26 +282,25 @@ def detect_duplicates(cursor, email_data, email_hash):
         logger.error(f"Error detecting duplicates for {email_data['filename']}: {str(e)}")
         return False
 
-
 # Step 9: Store email data in h2 database
 def store_email_data(cursor, email_data, intent, context, email_hash):
     logger.info(f"Storing email data for: {email_data['filename']}")
     try:
         cursor.execute("""
-            INSERT INTO emails (filename, request_type, sub_request_type, confidence, context, email_hash)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO emails (filename, request_type, sub_request_type, confidence, context, email_hash, email_from)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (
             email_data['filename'],
             intent['request_type'],
             intent['sub_request_type'],
             intent['request_confidence'],
             str(context),
-            email_hash
+            email_hash,
+            email_data['from_address']
         ))
         logger.info("Email data stored successfully.")
     except Exception as e:
         logger.error(f"Error storing email data for {email_data['filename']}: {str(e)}")
-
 
 # Step 10: Route request
 def route_request(result):
@@ -293,18 +315,18 @@ def route_request(result):
         logger.error(f"Error routing request for {result['filename']}: {str(e)}")
         return result
 
-
 # Step 11: Log classification decision for bias mitigation
 def log_classification_decision(result):
     logger.info(f"Logging classification decision for: {result['filename']}")
     try:
         with open("classification_log.txt", "a") as f:
-            f.write(
-                f"{datetime.now()} - Email: {result['filename']}, Intent: {result['intent']['request_type']}, Confidence: {result['intent']['confidence']}\n")
+            f.write(f"{datetime.now()} - Email: {result['filename']}, Intent: {result['intent']['request_type']}, Confidence: {result['intent']['request_confidence'] * 100:.2f}%\n")
+            if result['intent']['sub_request_type']:
+                f.write(f"Sub-Intent: {result['intent']['sub_request_type']}, Sub-Confidence: {result['intent']['sub_request_confidence'] * 100:.2f}%\n")
+            f.write("\n")
         logger.info("Classification decision logged.")
     except Exception as e:
         logger.error(f"Error logging classification decision for {result['filename']}: {str(e)}")
-
 
 # Step 12: Process a single email (without model loading)
 def process_single_email(args):
@@ -355,7 +377,6 @@ def process_single_email(args):
         logger.error(f"Error processing email {filepath}: {str(e)}")
         return None
 
-
 # Step 13: Process email pipeline with parallel processing
 def process_email_pipeline(directory):
     logger.info(f"Starting email processing pipeline for directory: {directory}")
@@ -401,22 +422,19 @@ def process_email_pipeline(directory):
         logger.error(f"Error in email processing pipeline: {str(e)}")
         return []
 
-
 # Flask routes
-@app.route('/')
+@ app.route('/')
 def upload_page():
     logger.info("Serving upload page.")
     return render_template('upload.html')
 
-
-@app.route('/upload', methods=['GET'])
+@ app.route('/upload', methods=['GET'])
 def upload_get():
     logger.info("Received GET request for /upload, redirecting to upload page.")
-    flash("Please use the form to upload files.", "info")
+    flash("Please use the form to submit files.", "info")
     return redirect(url_for('upload_page'))
 
-
-@app.route('/upload', methods=['POST'])
+@ app.route('/upload', methods=['POST'])
 def upload_files():
     logger.info("Received file upload request.")
     try:
@@ -431,12 +449,11 @@ def upload_files():
                 logger.info(f"Uploaded file: {file.filename}")
         results = process_email_pipeline(UPLOAD_FOLDER)
         logger.info("Upload and processing completed.")
-        return json.dumps(results)
+        return jsonify(results)
     except Exception as e:
         logger.error(f"Error handling upload: {str(e)}")
         flash(f"Error processing files: {str(e)}", "error")
         return redirect(url_for('upload_page'))
-
 
 if __name__ == "__main__":
     logger.info("Starting Flask application...")

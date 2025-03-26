@@ -1,0 +1,41 @@
+From: sender@example.com
+To: receiver@example.com
+Subject: Test Email with PDF
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============7312949420963371806=="
+
+--===============7312949420963371806==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+This is a test email with a PDF attachment.
+
+--===============7312949420963371806==
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="sample.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyAy
+IDAgUgovQ29udGVudHMgNCAwIFI+PgplbmRvYmoKNCAwIG9iago8PC9GaWx0ZXIgL0ZsYXRlRGVj
+b2RlIC9MZW5ndGggMjYxPj4Kc3RyZWFtCnicZZDLTsMwEEX3/Yq7BKkyTtLUybYqSFQgoeIfsOJJ
+Y0jsYDtE/XualPJQtzPnzpyZFLsFZ7nAuNhI3D0kSFLGOWSNezmV0hVnooAocyYEpMbNk1MWz06b
+2lQqGmexp4+BQryFfPtOZQlLSoisZPwc2pLyeB363vkISapbXmjO1mkBOf7G1kXKsmKOPWJ0Q6vR
+mndCdPDnTVDo/gqcOt0R7SSmhxmsjVW2MqpFo7wOjekDw0tLKhB67z6NJnSE0cTmR+S/RL5iPJsl
+YkOwVFEIyh9RO98FKKthbIh+qCaDwK6Oz0vBstU8YDMp7+kwmSyvwXU5f/wE7lxjsXV0Yb4ADDR3
+VAplbmRzdHJlYW0KZW5kb2JqCjEgMCBvYmoKPDwvVHlwZSAvUGFnZXMKL0tpZHMgWzMgMCBSIF0K
+L0NvdW50IDEKL01lZGlhQm94IFswIDAgNTk1LjI4IDg0MS44OV0KPj4KZW5kb2JqCjUgMCBvYmoK
+PDwvVHlwZSAvRm9udAovQmFzZUZvbnQgL0hlbHZldGljYQovU3VidHlwZSAvVHlwZTEKL0VuY29k
+aW5nIC9XaW5BbnNpRW5jb2RpbmcKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1Byb2NTZXQgWy9QREYg
+L1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUldCi9Gb250IDw8Ci9GMSA1IDAgUgo+PgovWE9i
+amVjdCA8PAo+Pgo+PgplbmRvYmoKNiAwIG9iago8PAovUHJvZHVjZXIgKFB5RlBERiAxLjcuMiBo
+dHRwOi8vcHlmcGRmLmdvb2dsZWNvZGUuY29tLykKL0NyZWF0aW9uRGF0ZSAoRDoyMDI1MDMyMDIy
+MTAxOCkKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL1R5cGUgL0NhdGFsb2cKL1BhZ2VzIDEgMCBSCi9P
+cGVuQWN0aW9uIFszIDAgUiAvRml0SCBudWxsXQovUGFnZUxheW91dCAvT25lQ29sdW1uCj4+CmVu
+ZG9iagp4cmVmCjAgOAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDA0MTggMDAwMDAgbiAKMDAw
+MDAwMDYwMSAwMDAwMCBuIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwODcgMDAwMDAgbiAK
+MDAwMDAwMDUwNSAwMDAwMCBuIAowMDAwMDAwNzA1IDAwMDAwIG4gCjAwMDAwMDA4MTQgMDAwMDAg
+biAKdHJhaWxlcgo8PAovU2l6ZSA4Ci9Sb290IDcgMCBSCi9JbmZvIDYgMCBSCj4+CnN0YXJ0eHJl
+Zgo5MTcKJSVFT0YK
+
+--===============7312949420963371806==--
